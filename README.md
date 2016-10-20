@@ -1,4 +1,4 @@
-# Space Invaders
+# Vector Racer
 ### Projecto de IA - 16'17
 
 ---
@@ -9,4 +9,4 @@
 
 ---
 
-Mais informação no Enunciado do Projecto (a publicar)
+Mais informação no [Enunciado do Projecto](enunciado_pt.pdf)
