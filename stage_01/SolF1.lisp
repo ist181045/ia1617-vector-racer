@@ -3,8 +3,8 @@
 
 ;;; Utilizar estes includes para os testes na versao local
 ;;; comentar antes de submeter
-(load "scripts/datastructures.lisp")
-(load "scripts/auxfuncs.lisp")
+(load "datastructures.lisp")
+(load "auxfuncs.lisp")
 
 ;;; Utilizar estes includes para a versao a submeter
 ; tirar o comentario antes de submeter
