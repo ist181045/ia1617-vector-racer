@@ -43,26 +43,29 @@
 			(p_t
 				(list
 					(+ (car (state-pos st)) (car v_t))
-					(+ (cadr (state-pos st)) (cadr act))))
+					(+ (cadr (state-pos st)) (cadr v_t))))
 			(state
 				(make-state
 					:pos p_t
 					:vel v_t
 					:action act
 					:cost 1
+					:track (state-track st)
 					:other (state-other st)))
 		)
-		(cond
-			((isObstaclep p_t (state-track track))
+		(cond (
+			(isObstaclep p_t (state-track state))
 				(setf
 					(state-pos state) (state-pos st)
 					(state-vel state) '(0 0)
-					(state-cost state) 20)
+					(state-cost state) 20
+				)
+			)(
+			(isGoalp state)
+				(setf
+					(state-cost state) -100
+				)
 			)
-			((isGoalp state)
-				(state-cost state -100)
-			)
-			(t state)
 		)
 		state
 	)
