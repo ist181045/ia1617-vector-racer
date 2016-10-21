@@ -37,13 +37,9 @@
 (defun nextState (st act)
 	(let* (
 			(v_t
-				(list
-					(+ (car (state-vel st)) (car act))
-					(+ (cadr (state-vel st)) (cadr act))))
+				(mapcar #'+ (state-vel st) act))
 			(p_t
-				(list
-					(+ (car (state-pos st)) (car v_t))
-					(+ (cadr (state-pos st)) (cadr v_t))))
+				(mapcar #'+ (state-pos st) v_t))
 			(state
 				(make-state
 					:pos p_t
