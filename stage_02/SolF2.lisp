@@ -86,6 +86,17 @@
      lim - depth limit"
   (list (make-node :state (problem-initial-state problem))) )
 
+(defun recursiveDFS (node problem lim)
+  (cond ((funcall (problem-fn-isGoal problem) (node-state node)) node)
+        ((= lim 0) :corte)
+        (t (let ((cutoff? nil))
+             (dolist (s (funcall (problem-fn-nextStates problem) (node-state node)))
+               (let* ((child (make-node :parent node :state s))
+                      (result (recursiveDFS child problem (1- lim))))
+                 (cond ((eq result :corte) (setf cutoff? t))
+                       ((not (null result)) (return-from recursiveDFS result)))))
+               (if cutoff? :corte nil)))))
+
 
 ;iterlimdepthfirstsearch
 (defun iterlimdepthfirstsearch (problem &key (lim most-positive-fixnum))
