@@ -103,8 +103,6 @@
 
 ;iterlimdepthfirstsearch
 (defun iterlimdepthfirstsearch (problem &key (lim most-positive-fixnum))
-  "limited depth first search
-     st - initial state
-     problem - problem information
-     lim - limit of depth iterations"
-  (list (make-node :state (problem-initial-state problem))) )
+  (dotimes (d lim)
+    (let ((result (limdepthfirstsearch problem d)))
+      (when (listp result) (return result)))))
