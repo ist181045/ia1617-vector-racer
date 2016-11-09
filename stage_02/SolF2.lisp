@@ -74,8 +74,9 @@
 
 ;;; Pedir
 (defun nextStates (st)
-  (loop for act in (possible-actions)
-    collect (nextState st act)))
+  (loop for l in '(-1 1 -1  1  0 -1 1 0 0)
+        for c in '(-1 1  1 -1 -1 0  0 1 0)
+    collect (nextState st (list l c))))
 
 ;;; limdepthfirstsearch
 (defun limdepthfirstsearch (problem lim &key cutoff?)
