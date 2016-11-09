@@ -79,12 +79,15 @@
     collect (nextState st (list l c))))
 
 ;;; limdepthfirstsearch
-(defun limdepthfirstsearch (problem lim &key cutoff?)
-  "limited depth first search
-     st - initial state
-     problem - problem information
-     lim - depth limit"
-  (list (make-node :state (problem-initial-state problem))) )
+(defun limdepthfirstsearch (problem lim)
+  (let* ((firstNode (make-node :state (problem-initial-state problem)))
+        (result (recursiveDFS firstNode problem lim)))
+    (if (or (eq result :corte) (null result)) result
+      (generateSolution result))))
+
+(defun generateSolution (node)
+  (if (null node) ()
+      (nconc (generateSolution (node-parent node)) (list (node-state node)))))
 
 (defun recursiveDFS (node problem lim)
   (cond ((funcall (problem-fn-isGoal problem) (node-state node)) node)
