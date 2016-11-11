@@ -12,10 +12,10 @@
 ;;;  * env - track where nil are obstacles, everything else is the track
 ;;;  * startpos - initial position
 ;;;  * endpositions - list of valid final positions
-(defstruct track 
-  size 
-  env 
-  startpos 
+(defstruct track
+  size
+  env
+  startpos
   endpositions)
 
 ;;; State of the car
@@ -25,23 +25,23 @@
 ;;;  * cost - cost of the action
 ;;;  * track - VectorRace track
 ;;;  * other - additional information
-(defstruct state 
-  pos 
+(defstruct state
+  pos
   vel
   action
   cost
   track
   other)
-						
+
 ;;; Definition of a problem
 ;;;  * initial-state
 ;;;  * fn-nextstate - function that computes the successors of a state
 ;;;  * fn-isGoal - funtion that identifies a goal state
 ;;;  * fn-h - heuristic function
-(defstruct problem 
+(defstruct problem
   initial-state
-  fn-nextStates 
-  fn-isGoal 
+  fn-nextStates
+  fn-isGoal
   fn-h)
 
 ;;; Definition of a search node
