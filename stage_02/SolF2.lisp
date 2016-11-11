@@ -74,16 +74,14 @@
 
 ;;; Pedir
 (defun nextStates (st)
-  (loop for l in '(-1 1 -1  1  0 -1 1 0 0)
-        for c in '(-1 1  1 -1 -1 0  0 1 0)
-    collect (nextState st (list l c))))
+  (loop for act in (reverse (possible-actions))
+    collect (nextState st act)))
 
 ;;; limdepthfirstsearch
 (defun limdepthfirstsearch (problem lim)
   (let* ((firstNode (make-node :state (problem-initial-state problem)))
         (result (recursiveDFS firstNode problem lim)))
-    (if (or (eq result :corte) (null result)) result
-      (generateSolution result))))
+    (if (node-p result) (generateSolution result) result)))
 
 (defun generateSolution (node)
   (if (null node) ()
@@ -103,6 +101,6 @@
 
 ;iterlimdepthfirstsearch
 (defun iterlimdepthfirstsearch (problem &key (lim most-positive-fixnum))
-  (dotimes (d lim)
-    (let ((result (limdepthfirstsearch problem d)))
+  (dotimes (depth lim)
+    (let ((result (limdepthfirstsearch problem depth)))
       (when (listp result) (return result)))))
