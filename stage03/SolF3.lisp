@@ -27,12 +27,14 @@
   (second pos))
 
 
+
 ;; Solution of phase 1
 
+;;; getTrackContent Helper
 (defun getTrackContent (pos track)
   (nth (pos-c pos) (nth (pos-l pos) (track-env track))))
 
-;; Pedir 0,4
+;; isObstaclep
 (defun isObstaclep (pos track)
   "check if the position pos is an obstacle"
   (or (< (pos-l pos) 0) (< (pos-c pos) 0)
@@ -40,7 +42,7 @@
       (>= (pos-c pos) (pos-c (track-size track)))
       (null (getTrackContent pos track))))
 
-;; Pedir 0,4
+;; isGoalp
 (defun isGoalp (st)
   "check if st is a solution of the problem"
   (let ((current-position (state-pos st))
@@ -48,7 +50,7 @@
     (and (member current-position (track-endpositions track) :test #'equalp)
    T)))
 
-;; Pedir 1,2
+;; nextState
 (defun nextState (st act)
   "generate the nextState after state st and action act from prolem"
   (let ((new-state (make-state :action act :track (state-track st))))
@@ -72,7 +74,7 @@
 
 ;; Solution of phase 2
 
-;;; Pedir
+;;; nextStates
 (defun nextStates (st)
   (loop for act in (reverse (possible-actions))
     collect (nextState st act)))
@@ -99,8 +101,20 @@
                (if cutoff? :corte nil)))))
 
 
-;iterlimdepthfirstsearch
+;;; iterlimdepthfirstsearch
 (defun iterlimdepthfirstsearch (problem &key (lim most-positive-fixnum))
   (dotimes (depth lim)
     (let ((result (limdepthfirstsearch problem depth)))
       (when (listp result) (return result)))))
+
+
+
+;;; Solution to phase 3
+
+;;; compute-heuristic
+(defun compute-heuristic (state)
+  nil)
+
+;;; A* search
+(defun a* (problem)
+  nil)
