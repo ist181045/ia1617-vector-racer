@@ -32,7 +32,7 @@
   cost
   track
   other)
-						
+            
 ;;; Definition of a problem
 ;;;  * initial-state
 ;;;  * fn-nextstate - function that computes the successors of a state
