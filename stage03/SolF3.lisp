@@ -1,5 +1,5 @@
-(load "datastructures.lisp")
-(load "auxfuncs.lisp")
+(load "datastructures.fas")
+(load "auxfuncs.fas")
 
 
 ;;; TAI position
@@ -26,6 +26,13 @@
 (defun vel-c (pos)
   (second pos))
 
+;;; order list of coordinates by column then row ascending
+(defun ordercoordinates (coordlist)
+  ;; order list of coordinates
+  (stable-sort (copy-alist coordlist)
+    #'(lambda (x y)
+      (< (+ (* (car x) 10) (second x))
+         (+ (* (car y) 10) (second y))))))
 
 
 ;; Solution of phase 1
@@ -46,9 +53,8 @@
 (defun isGoalp (st)
   "check if st is a solution of the problem"
   (let ((current-position (state-pos st))
-  (track (state-track st)))
-    (and (member current-position (track-endpositions track) :test #'equalp)
-   T)))
+        (track (state-track st)))
+    (and (member current-position (track-endpositions track) :test #'equalp) T)))
 
 ;; nextState
 (defun nextState (st act)
@@ -56,18 +62,18 @@
   (let ((new-state (make-state :action act :track (state-track st))))
     (setf (state-vel new-state)
     (make-vel (+ (vel-l (state-vel st)) (acce-l act))
-        (+ (vel-c (state-vel st)) (acce-c act))))
+              (+ (vel-c (state-vel st)) (acce-c act))))
     (setf (state-pos new-state)
     (make-pos (+ (pos-l (state-pos st)) (vel-l (state-vel new-state)))
-        (+ (pos-c (state-pos st)) (vel-c (state-vel new-state)))))
+              (+ (pos-c (state-pos st)) (vel-c (state-vel new-state)))))
     (setf (state-cost new-state)
     (cond ((isGoalp new-state) -100)
-    ((isObstaclep (state-pos new-state) (state-track new-state)) 20)
-    (T 1)))
+          ((isObstaclep (state-pos new-state) (state-track new-state)) 20)
+          (T 1)))
     (when (= (state-cost new-state) 20)
       (setf (state-vel new-state) (make-vel 0 0))
       (setf (state-pos new-state) (make-pos (pos-l (state-pos st))
-              (pos-c (state-pos st)))))
+                                            (pos-c (state-pos st)))))
     (values new-state)))
 
 
@@ -82,7 +88,7 @@
 ;;; limdepthfirstsearch
 (defun limdepthfirstsearch (problem lim)
   (let* ((firstNode (make-node :state (problem-initial-state problem)))
-        (result (recursiveDFS firstNode problem lim)))
+         (result (recursiveDFS firstNode problem lim)))
     (if (node-p result) (generateSolution result) result)))
 
 (defun generateSolution (node)
@@ -112,9 +118,14 @@
 ;;; Solution to phase 3
 
 ;;; compute-heuristic
-(defun compute-heuristic (state)
-  nil)
+(defun compute-heuristic (st)
+  (cond ((isGoalp st) 0)
+    (T (let* ((col (pos-c (first (ordercoordinates (track-endpositions (state-track st))))))
+              (dist (abs (- col (pos-c (state-pos st))))))
+         (if (isObstaclep (state-pos st) (state-track st)) most-positive-fixnum dist)))))
+
+
 
 ;;; A* search
 (defun a* (problem)
-  nil)
+  (problem-intial-state problem))
