@@ -91,7 +91,7 @@
 
 (defun recursiveDFS (node problem lim)
   (cond ((funcall (problem-fn-isGoal problem) (node-state node)) node)
-        ((= lim 0) :corte)
+        ((zerop lim) :corte)
         (t (let ((cutoff? nil))
              (dolist (s (funcall (problem-fn-nextStates problem) (node-state node)))
                (let* ((child (make-node :parent node :state s))
