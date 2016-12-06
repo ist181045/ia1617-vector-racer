@@ -96,36 +96,24 @@
     collect (nextState st act)))
 
 ;; limdepthfirstsearch: problem x lim -> node?
-;; returns the solution of a problem or :corte if the limit is reached
+;; performs a recursive depth first search up until the limit is reached for a
+;; solution to the given problem, return the node with the goal state or :corte
 (defun limdepthfirstsearch (problem &optional (lim most-positive-fixnum))
   "performs a limited dfs and returns either the solution or :corte"
-  (let* ((firstNode (make-node :state (problem-initial-state problem)))
-         (result (recursiveDFS firstNode problem lim)))
+  (let ((firstNode (make-node :state (problem-initial-state problem)))
+        (result))
+    (labels ((recursiveDFS (node problem &optional (lim most-positive-fixnum))
+      (cond ((funcall (problem-fn-isGoal problem) (node-state node)) node)
+            ((zerop lim) :corte)
+            (t (let ((cutoff? nil))
+                 (dolist (s (funcall (problem-fn-nextStates problem) (node-state node)))
+                   (let* ((child (make-node :parent node :state s))
+                          (result (recursiveDFS child problem (1- lim))))
+                     (cond ((eq result :corte) (setf cutoff? t))
+                           ((not (null result)) (return-from recursiveDFS result)))))
+                   (if cutoff? :corte nil))))))
+    (setf result (recursiveDFS firstNode problem lim)))
     (if (node-p result) (solution result) result)))
-
-;; solution: node -> list
-;; builds and returns a list of a path to the goal state by traversing the
-;; last node with said state's parents recursively
-(defun solution (node)
-  "builds and returns a list of a path to the goal state"
-  (if (null node) ()
-      (nconc (solution (node-parent node)) (list (node-state node)))))
-
-;; recursiveDFS: node x problem x lim -> node?
-;; executes a recursive depth first search up until the limit is reached for a
-;; solution to the given problem, return the node with the goal state or :corte
-(defun recursiveDFS (node problem &optional (lim most-positive-fixnum))
-  "recursive limited search returns the node with the goal state or :corte"
-  (cond ((funcall (problem-fn-isGoal problem) (node-state node)) node)
-        ((zerop lim) :corte)
-        (t (let ((cutoff? nil))
-             (dolist (s (funcall (problem-fn-nextStates problem) (node-state node)))
-               (let* ((child (make-node :parent node :state s))
-                      (result (recursiveDFS child problem (1- lim))))
-                 (cond ((eq result :corte) (setf cutoff? t))
-                       ((not (null result)) (return-from recursiveDFS result)))))
-               (if cutoff? :corte nil)))))
-
 
 ;; iterlimdepthfirstsearch: problem x lim -> list?
 ;; iteratively execute a limited depth first search for a solution to the problem
@@ -135,6 +123,14 @@
   (dotimes (depth lim)
     (let ((result (limdepthfirstsearch problem depth)))
       (when (listp result) (return result)))))
+
+;; solution: node -> list
+;; builds and returns a list of a path to the goal state by traversing the
+;; last node with said state's parents recursively
+(defun solution (node)
+  "builds and returns a list of a path to the goal state"
+  (if (null node) ()
+    (nconc (solution (node-parent node)) (list (node-state node)))))
 
 
 
