@@ -163,9 +163,14 @@
           (setf new-node (make-node :state st
                                     :parent current-node
                                     :f (+ (node-g current-node) (funcall (problem-fn-h problem) st))
-                                    :g (state-cost st)
+                                    :g (+ (state-cost st) (state-cost (node-state current-node)))
                                     :h (funcall (problem-fn-h problem) st)))
           (setf open-nodes (insert-sorted open-nodes new-node)))))))
+
+(defun best-search (problem)
+  (setf (problem-fn-h problem) #'compute-better-heuristic)
+  (a* problem))
+
 
 ;;; insert-sorted
 (defun insert-sorted (lst node &optional (predicate #'<=))
