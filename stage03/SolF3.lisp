@@ -119,7 +119,7 @@
 
 ;;; Solution to phase 3
 
-;;; compute-heuristic
+;;; Euclidean distance
 (defun compute-heuristic (st)
   (cond ((isGoalp st) 0)
         ((isObstaclep (state-pos st) (state-track st)) most-positive-fixnum)
@@ -129,6 +129,7 @@
                 (if (< attempt dist) (setf dist attempt))))
             dist))))
 
+;;; Manhattan Distance
 (defun manhattan-distance (st)
   (cond ((isGoalp st) 0)
         ((isObstaclep (state-pos st) (state-track st)) most-positive-fixnum)
@@ -143,21 +144,21 @@
 
 ;;; A* search
 (defun a* (problem)
-  (let ((open-nodes (list))
-        (new-node)
-        (current-node))
+  (let ((open (list)) (closed (list))
+        (new-node) (current-node))
 
     (push (make-node :state (problem-initial-state problem)
                      :parent nil
                      :g 0
-                     :h (funcall (problem-fn-h problem) (problem-initial-state problem))) open-nodes)
+                     :h (funcall (problem-fn-h problem) (problem-initial-state problem))) open)
     (loop do
-      (if (null open-nodes) (return-from a* nil))
+      (if (null open) (return-from a* nil))
 
-      (setf current-node (pop open-nodes))
+      (setf current-node (pop open))
       (if (funcall (problem-fn-isGoal problem) (node-state current-node))
         (return-from a* (generateSolution current-node)))
 
+      (push current-node closed)
       (loop for st in (funcall (problem-fn-nextStates problem) (node-state current-node)) do
         (progn
           (setf new-node (make-node :state st
@@ -165,11 +166,15 @@
                                     :f (+ (node-g current-node) (funcall (problem-fn-h problem) st))
                                     :g (+ (state-cost st) (state-cost (node-state current-node)))
                                     :h (funcall (problem-fn-h problem) st)))
-          (setf open-nodes (insert-sorted open-nodes new-node)))))))
+          (if (member new-node closed :test #'equalp)
+            (continue)
+            (setf open (insert-sorted open new-node))))))))
 
+;;; A* w/ Manhattan distance heuristic
 (defun best-search (problem)
-  (setf (problem-fn-h problem) #'manhattan-distance)
-  (a* problem))
+  (let ((new-problem (copy-problem problem)))
+    (setf (problem-fn-h new-problem) #'manhattan-distance)
+    (a* new-problem)))
 
 
 ;;; insert-sorted
