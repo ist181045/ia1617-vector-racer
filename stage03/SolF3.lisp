@@ -101,15 +101,15 @@
   "performs a limited dfs and returns either the solution or :corte"
   (let* ((firstNode (make-node :state (problem-initial-state problem)))
          (result (recursiveDFS firstNode problem lim)))
-    (if (node-p result) (generateSolution result) result)))
+    (if (node-p result) (solution result) result)))
 
-;; generateSolution: node -> list
+;; solution: node -> list
 ;; builds and returns a list of a path to the goal state by traversing the
 ;; last node with said state's parents recursively
-(defun generateSolution (node)
+(defun solution (node)
   "builds and returns a list of a path to the goal state"
   (if (null node) ()
-      (nconc (generateSolution (node-parent node)) (list (node-state node)))))
+      (nconc (solution (node-parent node)) (list (node-state node)))))
 
 ;; recursiveDFS: node x problem x lim -> node?
 ;; executes a recursive depth first search up until the limit is reached for a
@@ -186,7 +186,7 @@
 
       (setf current-node (pop open))
       (if (funcall (problem-fn-isGoal problem) (node-state current-node))
-        (return-from a* (generateSolution current-node)))
+        (return-from a* (solution current-node)))
 
       (push current-node closed)
       (loop for st in (funcall (problem-fn-nextStates problem) (node-state current-node)) do
