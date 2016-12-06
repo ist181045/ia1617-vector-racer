@@ -129,7 +129,7 @@
                 (if (< attempt dist) (setf dist attempt))))
             dist))))
 
-(defun compute-better-heuristic (st)
+(defun manhattan-distance (st)
   (cond ((isGoalp st) 0)
         ((isObstaclep (state-pos st) (state-track st)) most-positive-fixnum)
         (T (let ((dist most-positive-fixnum))
@@ -168,7 +168,7 @@
           (setf open-nodes (insert-sorted open-nodes new-node)))))))
 
 (defun best-search (problem)
-  (setf (problem-fn-h problem) #'compute-better-heuristic)
+  (setf (problem-fn-h problem) #'manhattan-distance)
   (a* problem))
 
 
