@@ -1,5 +1,5 @@
-(load "datastructures.fas")
-(load "auxfuncs.fas")
+(load "datastructures.lisp")
+(load "auxfuncs.lisp")
 
 
 ;;; TAI position
@@ -122,9 +122,13 @@
 ;;; compute-heuristic
 (defun compute-heuristic (st)
   (cond ((isGoalp st) 0)
-    (T (let* ((col (pos-c (first (ordercoordinates (track-endpositions (state-track st))))))
-              (dist (abs (- col (pos-c (state-pos st))))))
-         (if (isObstaclep (state-pos st) (state-track st)) most-positive-fixnum dist)))))
+        ((isObstaclep (state-pos st) (state-track st)) most-positive-fixnum)
+        (T (let ((dist most-positive-fixnum))
+            (dolist (pos (track-endpositions (state-track st)))
+              (let ((attempt (abs (- (pos-c pos) (pos-c (state-pos st))))))
+                (if (< attempt dist) (setf dist attempt))))
+            dist))))
+
 
 
 
@@ -145,13 +149,13 @@
       (if (funcall (problem-fn-isGoal problem) (node-state current-node))
         (return-from a* (generateSolution current-node)))
 
-      (loop for s in (funcall (problem-fn-nextStates problem) (node-state current-node)) do
+      (loop for st in (funcall (problem-fn-nextStates problem) (node-state current-node)) do
         (progn
-          (setf new-node (make-node :state s
+          (setf new-node (make-node :state st
                                     :parent current-node
-                                    :f (+ (node-g current-node) (funcall (problem-fn-h problem) s))
-                                    :g (state-cost s)
-                                    :h (funcall (problem-fn-h problem) s)))
+                                    :f (+ (node-g current-node) (funcall (problem-fn-h problem) st))
+                                    :g (state-cost st)
+                                    :h (funcall (problem-fn-h problem) st)))
           (setf open-nodes (insert-sorted open-nodes new-node)))))))
 
 ;;; insert-sorted
