@@ -131,14 +131,14 @@
 
 (defun compute-better-heuristic (st)
   (cond ((isGoalp st) 0)
-        ((isObstaclep (state-pos st) (state-track st)) most-positive-fixnum dist)
-        (let (dist most-positive-fixnum)
-          (loop for a in (track-endpositions (state-track st)) do (
-            (let ((col (pos-c (first (track-endpositions (state-track st)))))
-                  (lin (pos-l (first (track-endpositions (state-track st)))))
-                  (dist_aux (abs (+ (- col (pos-c (state-pos st))) (- lin (pos-l (state-pos st))))))
-                  (if (< dist_aux dist) (setf dist dist_aux) t)))))
-            dist)))
+        ((isObstaclep (state-pos st) (state-track st)) most-positive-fixnum)
+        (T (let ((dist most-positive-fixnum))
+            (dolist (a (track-endpositions (state-track st)))
+              (let* ((dx (abs (- (pos-c a) (pos-c (state-pos st)))))
+                     (dy (abs (- (pos-l a) (pos-l (state-pos st)))))
+                     (d (+ dx dy)))
+                  (if (< d dist) (setf dist d))))
+            dist))))
 
 
 ;;; A* search
