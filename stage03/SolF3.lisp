@@ -91,10 +91,12 @@
          (result (recursiveDFS firstNode problem lim)))
     (if (node-p result) (generateSolution result) result)))
 
+;;; generateSolution
 (defun generateSolution (node)
   (if (null node) ()
       (nconc (generateSolution (node-parent node)) (list (node-state node)))))
 
+;;; recursiveDFS
 (defun recursiveDFS (node problem lim)
   (cond ((funcall (problem-fn-isGoal problem) (node-state node)) node)
         ((zerop lim) :corte)
@@ -128,4 +130,32 @@
 
 ;;; A* search
 (defun a* (problem)
-  (problem-intial-state problem))
+  (let ((open-nodes (list))
+        (new-node)
+        (current-node))
+
+    (push (make-node :state (problem-initial-state problem)
+                     :parent nil
+                     :g 0
+                     :h (funcall (problem-fn-h problem) (problem-initial-state problem))) open-nodes)
+    (loop do
+      (if (null open-nodes) (return-from a* nil))
+
+      (setf current-node (pop open-nodes))
+      (if (funcall (problem-fn-isGoal problem) (node-state current-node))
+        (return-from a* (generateSolution current-node)))
+
+      (loop for s in (funcall (problem-fn-nextStates problem) (node-state current-node)) do
+        (progn
+          (setf new-node (make-node :state s
+                                    :parent current-node
+                                    :f (+ (node-g current-node) (funcall (problem-fn-h problem) s))
+                                    :g (state-cost s)
+                                    :h (funcall (problem-fn-h problem) s)))
+          (setf open-nodes (insert-sorted open-nodes new-node)))))))
+
+;;; insert-sorted
+(defun insert-sorted (lst node &optional (predicate #'<=))
+  (cond ((null lst) (list node))
+        ((funcall predicate (node-f node) (node-f (car lst))) (push node lst))
+        (t (append (list (car lst)) (insert-sorted (rest lst) node predicate)))))
