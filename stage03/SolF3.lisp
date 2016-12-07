@@ -7,8 +7,10 @@
 ;; make-pos: l x c -> position (list)
 (defun make-pos (r c)
   (list r c))
+;; pos-r: pos -> number (row)
 (defun pos-r (pos)
   (first pos))
+;; pos-c: pos -> number (column)
 (defun pos-c (pos)
   (second pos))
 
@@ -164,37 +166,45 @@
                   (if (< d dist) (setf dist d))))
             dist))))
 
+;; insert-sorted: list x node x predicate -> list
+;; takes a node and inserts it in the list according to the given predicate
+(defun insert-sorted (lst node &key (compare #'<=))
+  "inserts a node in the given list using the comparing function"
+  (cond ((null lst) (list node))
+        ((funcall compare (node-f node) (node-f (car lst))) (push node lst))
+        (t (append (list (car lst)) (insert-sorted (rest lst) node :compare compare)))))
+
 
 ;; a*: problem -> list?
 ;; performs an A* guided search using the problem's heuristic function. returns
 ;; a list with the path to the goal state, nil otherwise
 (defun a* (problem)
   "performs an A* guided search, returning the path to the solution"
-  (let ((open (list)) (closed (list))
-        (new-node) (current-node))
-
+  (let ((open (list)) (closed (list)))
     (push (make-node :state (problem-initial-state problem)
-                     :parent nil
-                     :g 0
-                     :h (funcall (problem-fn-h problem) (problem-initial-state problem))) open)
+                     :g 0) open)
+
     (loop do
-      (if (null open) (return-from a* nil))
-
-      (setf current-node (pop open))
-      (if (funcall (problem-fn-isGoal problem) (node-state current-node))
-        (return-from a* (solution current-node)))
-
-      (push current-node closed)
-      (loop for st in (funcall (problem-fn-nextStates problem) (node-state current-node)) do
-        (progn
-          (setf new-node (make-node :state st
-                                    :parent current-node
-                                    :f (+ (node-g current-node) (funcall (problem-fn-h problem) st))
-                                    :g (+ (state-cost st) (state-cost (node-state current-node)))
-                                    :h (funcall (problem-fn-h problem) st)))
-          (if (member new-node closed :test #'equalp)
-            (continue)
-            (setf open (insert-sorted open new-node))))))))
+      (if (null open) (return-form a* nil))
+      (let ((curr (pop open)))
+        (if (funcall (problem-fn-isGoal problem) (node-state curr))
+          (return-from a* (solution curr)))
+        (push curr closed)
+        (loop for st in (funcall (problem-fn-nextStates problem) (node-state curr)) do
+          (if (not (member st closed :test #'equalp :key #'node-state))
+            (let ((new (make-node :state st
+                                  :parent curr
+                                  :g (+ (node-g curr) (state-cost st))
+                                  :h (funcall (problem-fn-h problem) st))))
+              (setf (node-f new) (+ (node-g new) (node-h new)))
+              (let ((dup (car (member st open :test #'equalp :key #'node-state))))
+                (cond ((null dup) (setf open (insert-sorted open new)))
+                      (t (setf open (substitute new dup open :test #'equalp))
+                        (if (< (node-g new) (node-g dup))
+                          (progn
+                            (setf (node-g dup) (node-g new))
+                            (setf (node-parent dup) (node-parent new))))))))))))
+    nil))
 
 ;; best-search: problem -> list?
 ;; performs an a* search using a different heuristic than the default provided
@@ -204,12 +214,3 @@
   (let ((new-problem (copy-problem problem)))
     (setf (problem-fn-h new-problem) #'manhattan-distance)
     (a* new-problem)))
-
-
-;; insert-sorted: list x node x predicate -> list
-;; takes a node and inserts it in the list according to the given predicate
-(defun insert-sorted (lst node &key (compare #'<=))
-  "inserts a node in the given list using the comparing function"
-  (cond ((null lst) (list node))
-        ((funcall compare (node-f node) (node-f (car lst))) (push node lst))
-        (t (append (list (car lst)) (insert-sorted (rest lst) node :compare compare)))))
