@@ -143,7 +143,7 @@
   "returns one-dimension distance between current and closest end position"
   (cond ((isGoalp st) 0)
         ((isObstaclep (state-pos st) (state-track st)) most-positive-fixnum)
-        (T (let ((dist most-positive-fixnum))
+        (t (let ((dist most-positive-fixnum))
             (dolist (pos (track-endpositions (state-track st)))
               (let ((attempt (abs (- (pos-c pos) (pos-c (state-pos st))))))
                 (if (< attempt dist) (setf dist attempt))))
@@ -156,7 +156,7 @@
   "calculates the manhattan distance between current and closest end positions"
   (cond ((isGoalp st) 0)
         ((isObstaclep (state-pos st) (state-track st)) most-positive-fixnum)
-        (T (let ((dist most-positive-fixnum))
+        (t (let ((dist most-positive-fixnum))
             (dolist (a (track-endpositions (state-track st)))
               (let* ((dx (abs (- (pos-c a) (pos-c (state-pos st)))))
                      (dy (abs (- (pos-r a) (pos-r (state-pos st)))))
