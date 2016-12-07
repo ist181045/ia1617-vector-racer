@@ -185,7 +185,7 @@
                      :g 0) open)
 
     (loop do
-      (if (null open) (return-form a* nil))
+      (if (null open) (return-from a* nil))
       (let ((curr (pop open)))
         (if (funcall (problem-fn-isGoal problem) (node-state curr))
           (return-from a* (solution curr)))
