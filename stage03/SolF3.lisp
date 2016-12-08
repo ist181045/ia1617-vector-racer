@@ -182,7 +182,7 @@
   "performs an A* guided search, returning the path to the solution"
   (let ((open (list)) (closed (list)))
     (push (make-node :state (problem-initial-state problem)
-                     :g 0) open)
+                     :g (state-cost (problem-initial-state problem))) open)
 
     (loop do
       (if (null open) (return-from a* nil))
@@ -191,19 +191,17 @@
           (return-from a* (solution curr)))
         (push curr closed)
         (loop for st in (funcall (problem-fn-nextStates problem) (node-state curr)) do
-          (if (not (member st closed :test #'equalp :key #'node-state))
-            (let ((new (make-node :state st
-                                  :parent curr
-                                  :g (+ (node-g curr) (state-cost st))
-                                  :h (funcall (problem-fn-h problem) st))))
-              (setf (node-f new) (+ (node-g new) (node-h new)))
-              (let ((dup (car (member st open :test #'equalp :key #'node-state))))
-                (cond ((null dup) (setf open (insert-sorted open new)))
-                      (t (setf open (substitute new dup open :test #'equalp))
-                        (if (< (node-g new) (node-g dup))
-                          (progn
-                            (setf (node-g dup) (node-g new))
-                            (setf (node-parent dup) (node-parent new))))))))))))
+          (let ((nodeInOpen) (nodeInClosed)
+               (new (make-node :state st :parent curr
+                               :g (+ (node-g curr) (state-cost st))
+                               :h (funcall (problem-fn-h problem) st))))
+            (setf (node-f new) (+ (node-g new) (node-h new)))
+            (setf nodeInOpen (car (member (node-state new) open :test #'equalp :key #'node-state)))
+            (setf nodeInClosed (car (member (node-state new) closed :test #'equalp :key #'node-state)))
+            (cond ((and (null nodeInOpen) (null nodeInClosed))
+                    (setf open (insert-sorted open new)))
+                  ((and (not (null nodeInOpen)) (< (node-f new) (node-f nodeInOpen)))
+                    (substitute new nodeInOpen open :test #'equalp)))))))
     nil))
 
 ;; best-search: problem -> list?
