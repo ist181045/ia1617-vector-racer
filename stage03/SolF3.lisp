@@ -171,22 +171,6 @@
     (setf (state-other st) (list (state-track st) hmat)))))
   (aref (cadr (state-other st)) (pos-r (state-pos st)) (pos-c (state-pos st))))
 
-
-;; manhattan-distance: state -> number
-;; calculates the manhattan distance between the current position and the
-;; closest end position (abs(xf - x0) + abs(yf - y0))
-(defun manhattan-distance (st)
-  "calculates the manhattan distance between current and closest end positions"
-  (cond ((isGoalp st) 0)
-        ((isObstaclep (state-pos st) (state-track st)) most-positive-fixnum)
-        (t (let ((dist most-positive-fixnum))
-            (dolist (a (track-endpositions (state-track st)))
-              (let* ((dx (abs (- (pos-c a) (pos-c (state-pos st)))))
-                     (dy (abs (- (pos-r a) (pos-r (state-pos st)))))
-                     (d (+ dx dy)))
-                  (if (< d dist) (setf dist d))))
-            dist))))
-
 ;; insert-sorted: list x node x predicate -> list
 ;; takes a node and inserts it in the list according to the given predicate
 (defun insert-sorted (node seq &key (compare #'<=))
@@ -229,15 +213,14 @@
             (cond ((and (null nodeInOpen) (null nodeInClosed))
                     (setf open (insert-sorted new open)))
                   ((and (not (null nodeInOpen)) (< (node-f new) (node-f nodeInOpen)))
-                    (ndelete nodeInOpen open :test #'eq)
+                    (setf open (remove nodeInOpen open :test #'eq))
                     (setf open (insert-sorted new open))))))))
     nil))
 
 ;; best-search: problem -> list?
-;; performs an a* search using a different heuristic than the default provided
-;; by the problem
+;; performs an a* search. A* was already optimized, including a list for closed,
+;; nodes, as was the heuristic's computation, which is done only once per
+;; different search.
 (defun best-search (problem)
-  "performs an a* search using the manhattan distance heuristic"
-  (let ((new-problem (copy-problem problem)))
-    (setf (problem-fn-h new-problem) #'manhattan-distance)
-    (a* new-problem)))
+  "performs an a* search"
+  (a* new-problem))
