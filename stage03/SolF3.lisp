@@ -168,11 +168,11 @@
 
 ;; insert-sorted: list x node x predicate -> list
 ;; takes a node and inserts it in the list according to the given predicate
-(defun insert-sorted (lst node &key (compare #'<=))
+(defun insert-sorted (seq node &key (compare #'<=))
   "inserts a node in the given list using the comparing function"
-  (cond ((null lst) (list node))
-        ((funcall compare (node-f node) (node-f (car lst))) (push node lst))
-        (t (append (list (car lst)) (insert-sorted (rest lst) node :compare compare)))))
+  (cond ((null seq) (list node))
+        ((funcall compare (node-f node) (node-f (car seq))) (push node seq))
+        (t (append (list (car seq)) (insert-sorted (rest seq) node :compare compare)))))
 
 (defun node-posp (node other)
   (equalp (state-pos (node-state node)) (state-pos (node-state other))))
@@ -200,10 +200,10 @@
                                 :h (funcall (problem-fn-h problem) st))))
             (setf (node-f new) (+ (node-g new) (node-h new)))
             (cond ((and (null nodeInOpen) (null nodeInClosed))
-                    (setf open (insert-sorted open new)))
+                    (setf open (insert-sorted new open)))
                   ((and (not (null nodeInOpen)) (< (node-f new) (node-f nodeInOpen)))
                     (nremove nodeInOpen open :test #'equalp)
-                    (setf open (insert-sorted open new))))))))
+                    (setf open (insert-sorted new open))))))))
     nil))
 
 ;; best-search: problem -> list?
