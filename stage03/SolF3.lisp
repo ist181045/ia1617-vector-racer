@@ -139,17 +139,38 @@
 ;;; Solution to phase 3
 
 ;; compute-heuristc: state -> number
-;; calculates the distance on the x-axis (column difference) from the current
-;; position to the closest end position
+;; calculates the heuristic value of a given state's position. If the value is
+;; initially unknown (i.e. other's car isn't the same track as the state's), it
+;; computes the heuristic value for every single position and stores it in the
+;; state.
+;;
+;; !!WARNING!! It modifies the state! Children of this state should bear the same
+;; value of the parent's other attribute.
 (defun compute-heuristic (st)
-  "returns one-dimension distance between current and closest end position"
-  (cond ((isGoalp st) 0)
-        ((isObstaclep (state-pos st) (state-track st)) most-positive-fixnum)
-        (t (let ((dist most-positive-fixnum))
-            (dolist (pos (track-endpositions (state-track st)))
-              (let ((attempt (abs (- (pos-c pos) (pos-c (state-pos st))))))
-                (if (< attempt dist) (setf dist attempt))))
-            dist))))
+  "returns the heuristic value of a position, if exists. Else, BFS to plan out all"
+  (cond ((null (state-other st))
+    (let* ((rows (car (track-size (state-track st))))
+           (cols (cadr (track-size (state-track st))))
+           (hmat (make-array (list rows cols) :initial-element most-positive-fixnum)))
+      (dolist (endpos (track-endpositions (state-track st)))
+        (setf (aref hmat (pos-r endpos) (pos-c endpos)) 0))
+
+        (let ((curr) (explored) (adjh) (candh)
+              (queue (list (first (track-endpositions (state-track st))))))
+        (loop while (not (null queue)) do
+          (setf curr (pop queue))
+          (setf candh (aref hmat (pos-r curr) (pos-c curr)))
+          (dolist (next (possible-actions))
+            (setf next (mapcar #'+ next curr))
+            (cond ((and (not (member curr explored :test #'equal))
+                (not (isObstaclep next (state-track st))))
+              (setf adjh (min (aref hmat (pos-r next) (pos-c next)) (1+ candh)))
+              (setf (aref hmat (pos-r next) (pos-c next)) adjh)
+              (push next queue))))
+          (push curr explored)))
+    (setf (state-other st) (list (state-track st) hmat)))))
+  (aref (cadr (state-other st)) (pos-r (state-pos st)) (pos-c (state-pos st))))
+
 
 ;; manhattan-distance: state -> number
 ;; calculates the manhattan distance between the current position and the
@@ -174,8 +195,11 @@
         ((funcall compare (node-f node) (node-f (car seq))) (push node seq))
         (t (append (list (car seq)) (insert-sorted node (rest seq) :compare compare)))))
 
-(defun node-posp (node other)
-  (equalp (state-pos (node-state node)) (state-pos (node-state other))))
+;; cmp-node-pos: node x node -> generalized-boolean
+;; returns true if the position of the nodes' states are the same
+(defun cmp-node-pos (node other)
+  "checks if the nodes' states' positions are the same"
+  (equal (state-pos (node-state node)) (state-pos (node-state other))))
 
 ;; a*: problem -> list?
 ;; performs an A* guided search using the problem's heuristic function. returns
@@ -184,7 +208,8 @@
   "performs an A* guided search, returning the path to the solution"
   (let ((open (list)) (closed (list)))
     (push (make-node :state (problem-initial-state problem)
-                     :g (state-cost (problem-initial-state problem))) open)
+                     :g (state-cost (problem-initial-state problem))
+                     :h (funcall (problem-fn-h problem) (problem-initial-state problem))) open)
 
     (loop do
       (if (null open) (return-from a* nil))
@@ -193,16 +218,18 @@
           (return-from a* (solution curr)))
         (push curr closed)
         (loop for st in (funcall (problem-fn-nextStates problem) (node-state curr)) do
-          (let ((nodeInOpen (car (member (make-node :state st) open :test #'node-posp)))
-                (nodeInClosed (car (member (make-node :state st) closed :test #'node-posp)))
-                (new (make-node :state st :parent curr
-                                :g (+ (node-g curr) (state-cost st))
-                                :h (funcall (problem-fn-h problem) st))))
+          (let ((nodeInOpen (car (member (make-node :state st) open :test #'cmp-node-pos)))
+                (nodeInClosed (car (member (make-node :state st) closed :test #'cmp-node-pos)))
+                (new (make-node :state st :parent curr)))
+            (setf (state-other (node-state new)) (state-other (node-state curr)))
+            (setf (node-g new) (+ (node-g curr) (state-cost st)))
+            (setf (node-h new) (funcall (problem-fn-h problem) st))
             (setf (node-f new) (+ (node-g new) (node-h new)))
+
             (cond ((and (null nodeInOpen) (null nodeInClosed))
                     (setf open (insert-sorted new open)))
                   ((and (not (null nodeInOpen)) (< (node-f new) (node-f nodeInOpen)))
-                    (nremove nodeInOpen open :test #'equalp)
+                    (ndelete nodeInOpen open :test #'eq)
                     (setf open (insert-sorted new open))))))))
     nil))
 
