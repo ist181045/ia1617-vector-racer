@@ -168,11 +168,11 @@
 
 ;; insert-sorted: list x node x predicate -> list
 ;; takes a node and inserts it in the list according to the given predicate
-(defun insert-sorted (seq node &key (compare #'<=))
+(defun insert-sorted (node seq &key (compare #'<=))
   "inserts a node in the given list using the comparing function"
   (cond ((null seq) (list node))
         ((funcall compare (node-f node) (node-f (car seq))) (push node seq))
-        (t (append (list (car seq)) (insert-sorted (rest seq) node :compare compare)))))
+        (t (append (list (car seq)) (insert-sorted node (rest seq) :compare compare)))))
 
 (defun node-posp (node other)
   (equalp (state-pos (node-state node)) (state-pos (node-state other))))
