@@ -200,9 +200,10 @@
                                 :h (funcall (problem-fn-h problem) st))))
             (setf (node-f new) (+ (node-g new) (node-h new)))
             (cond ((and (null nodeInOpen) (null nodeInClosed))
-                (if (and (not (null nodeInOpen)) (< (node-f new) (node-f nodeInOpen)))
-                  (nremove nodeInOpen open :test #'node-posp))
-                (setf open (insert-sorted open new))))))))
+                    (setf open (insert-sorted open new)))
+                  ((and (not (null nodeInOpen)) (< (node-f new) (node-f nodeInOpen)))
+                    (nremove nodeInOpen open :test #'equalp)
+                    (setf open (insert-sorted open new))))))))
     nil))
 
 ;; best-search: problem -> list?
