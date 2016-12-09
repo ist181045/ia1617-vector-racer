@@ -174,6 +174,8 @@
         ((funcall compare (node-f node) (node-f (car lst))) (push node lst))
         (t (append (list (car lst)) (insert-sorted (rest lst) node :compare compare)))))
 
+(defun node-posp (node other)
+  (equalp (state-pos (node-state node)) (state-pos (node-state other))))
 
 ;; a*: problem -> list?
 ;; performs an A* guided search using the problem's heuristic function. returns
@@ -191,16 +193,16 @@
           (return-from a* (solution curr)))
         (push curr closed)
         (loop for st in (funcall (problem-fn-nextStates problem) (node-state curr)) do
-          (let ((nodeInOpen (car (member st open :test #'equalp :key #'node-state)))
-                (nodeInClosed (car (member st closed :test #'equalp :key #'node-state)))
+          (let ((nodeInOpen (car (member (make-node :state st) open :test #'node-posp)))
+                (nodeInClosed (car (member (make-node :state st) closed :test #'node-posp)))
                 (new (make-node :state st :parent curr
                                 :g (+ (node-g curr) (state-cost st))
                                 :h (funcall (problem-fn-h problem) st))))
             (setf (node-f new) (+ (node-g new) (node-h new)))
             (cond ((and (null nodeInOpen) (null nodeInClosed))
-                    (setf open (insert-sorted open new)))
-                  ((and (not (null nodeInOpen)) (< (node-f new) (node-f nodeInOpen)))
-                    (substitute new nodeInOpen open :test #'equalp)))))))
+                (if (and (not (null nodeInOpen)) (< (node-f new) (node-f nodeInOpen)))
+                  (nremove nodeInOpen open :test #'node-posp))
+                (setf open (insert-sorted open new))))))))
     nil))
 
 ;; best-search: problem -> list?
