@@ -223,4 +223,4 @@
 ;; different search.
 (defun best-search (problem)
   "performs an a* search"
-  (a* new-problem))
+  (a* problem))
