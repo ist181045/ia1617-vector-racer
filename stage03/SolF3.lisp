@@ -148,7 +148,7 @@
 ;; value of the parent's other attribute.
 (defun compute-heuristic (st)
   "returns the heuristic value of a position, if exists. Else, BFS to plan out all"
-  (cond ((null (state-other st))
+  (cond ((or (null (state-other st)) (not (eq (state-track st) (car (state-other st)))))
     (let* ((rows (car (track-size (state-track st))))
            (cols (cadr (track-size (state-track st))))
            (hmat (make-array (list rows cols) :initial-element most-positive-fixnum)))
@@ -172,7 +172,7 @@
   (aref (cadr (state-other st)) (pos-r (state-pos st)) (pos-c (state-pos st))))
 
 ;; insert-sorted: list x node x predicate -> list
-;; takes a node and inserts it in the list according to the given predicate
+;; takes a node and inserts it in the list according to the given comparator
 (defun insert-sorted (node seq &key (compare #'<=))
   "inserts a node in the given list using the comparing function"
   (cond ((null seq) (list node))
@@ -180,10 +180,11 @@
         (t (append (list (car seq)) (insert-sorted node (rest seq) :compare compare)))))
 
 ;; cmp-node-pos: node x node -> generalized-boolean
-;; returns true if the position of the nodes' states are the same
-(defun cmp-node-pos (node other)
+;; returns true if the position and velocity of the nodes' states are the same
+(defun cmp-node-stts (node other)
   "checks if the nodes' states' positions are the same"
-  (equal (state-pos (node-state node)) (state-pos (node-state other))))
+  (and (equal (state-pos (node-state node)) (state-pos (node-state other)))
+       (equal (state-vel (node-state node)) (state-vel (node-state other)))))
 
 ;; a*: problem -> list?
 ;; performs an A* guided search using the problem's heuristic function. returns
@@ -202,8 +203,8 @@
           (return-from a* (solution curr)))
         (push curr closed)
         (loop for st in (funcall (problem-fn-nextStates problem) (node-state curr)) do
-          (let ((nodeInOpen (car (member (make-node :state st) open :test #'cmp-node-pos)))
-                (nodeInClosed (car (member (make-node :state st) closed :test #'cmp-node-pos)))
+          (let ((nodeInOpen (car (member (make-node :state st) open :test #'cmp-node-stts)))
+                (nodeInClosed (car (member (make-node :state st) closed :test #'cmp-node-stts)))
                 (new (make-node :state st :parent curr)))
             (setf (state-other (node-state new)) (state-other (node-state curr)))
             (setf (node-g new) (+ (node-g curr) (state-cost st)))
