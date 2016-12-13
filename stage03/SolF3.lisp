@@ -205,12 +205,12 @@
         (loop for st in (funcall (problem-fn-nextStates problem) (node-state curr)) do
           (let ((nodeInOpen (car (member (make-node :state st) open :test #'cmp-node-stts)))
                 (nodeInClosed (car (member (make-node :state st) closed :test #'cmp-node-stts)))
-                (new (make-node :state st :parent curr)))
+                (new (make-node :state st
+                                :parent curr
+                                :g (+ (node-g curr) (state-cost st)))))
             (setf (state-other (node-state new)) (state-other (node-state curr)))
-            (setf (node-g new) (+ (node-g curr) (state-cost st)))
             (setf (node-h new) (funcall (problem-fn-h problem) st))
             (setf (node-f new) (+ (node-g new) (node-h new)))
-
             (cond ((and (null nodeInOpen) (null nodeInClosed))
                     (setf open (insert-sorted new open)))
                   ((and (not (null nodeInOpen)) (< (node-f new) (node-f nodeInOpen)))
